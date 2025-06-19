@@ -1,5 +1,4 @@
-# Ignore tests and dev files
-tests/
+# Ignore dev files
 .vscode/
 .env
 *.log
