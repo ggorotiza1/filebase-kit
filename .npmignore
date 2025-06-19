@@ -1,0 +1,16 @@
+# Ignore tests and dev files
+tests/
+.vscode/
+.env
+*.log
+
+# Ignore git and editor metadata
+.git/
+.gitignore
+.npmignore
+
+# Node modules should never be published
+node_modules/
+
+# Optional files not needed in the npm package
+package-lock.json

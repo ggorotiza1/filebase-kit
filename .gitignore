@@ -1,0 +1,26 @@
+# Node.js dependencies
+node_modules/
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.*.local
+
+# Editor and system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Optional test output
+*.test.js.snap
+
+# Build outputs (if added later)
+dist/
+build/
+
+# OS-specific
+.AppleDouble
+.LSOverride
