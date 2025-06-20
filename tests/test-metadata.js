@@ -14,7 +14,7 @@ const client = new FilebaseClient({
  * The name of the file whose metadata you want to retrieve.
  * This file must exist in the configured bucket.
  */
-const fileName = 'YOUR_FILENAME';
+const fileName = 'YOUR_FILENAME.pdf';
 
 /**
  * Retrieves the metadata of a specified file from the Filebase bucket.
