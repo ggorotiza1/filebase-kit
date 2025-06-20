@@ -99,6 +99,25 @@ class FilebaseClient {
       return { success: false, error: error.message };
     }
   }
+
+  /**
+ * Deletes a file from the Filebase bucket.
+ * @param {string} fileName - The key (name) of the file to delete.
+ * @returns {Promise<object>} A promise resolving to an object with success status or error message.
+ */
+  async deleteFile(fileName) {
+    try {
+      const params = {
+        Bucket: this.bucketName,
+        Key: fileName,
+      };
+      await this.s3.deleteObject(params).promise();
+      return { success: true, message: `Archivo "${fileName}" eliminado correctamente.` };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
 }
 
 module.exports = FilebaseClient;

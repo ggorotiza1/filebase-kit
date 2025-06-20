@@ -16,7 +16,7 @@ const client = new FilebaseClient({
  * The name of the file to be downloaded from the bucket.
  * Must exist in the configured bucket.
  */
-const fileName = 'informe.pdf';
+const fileName = 'YOUR_FILENAME.pdf';
 
 /**
  * Downloads a file from the Filebase bucket and saves it locally.

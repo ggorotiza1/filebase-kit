@@ -1,6 +1,6 @@
 {
   "name": "filebase-kit",
-  "version": "2.1.0",
+  "version": "1.0.1",
   "description": "A simple and promise-based Node.js client for interacting with Filebase (S3-compatible storage).",
   "type": "commonjs",
   "main": "src/filebase.js",
