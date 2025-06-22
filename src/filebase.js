@@ -22,25 +22,50 @@ class FilebaseClient {
   }
 
   /**
-   * Uploads a file to the Filebase bucket.
-   * @param {string} filePath - Local path of the file to upload.
-   * @param {string} fileName - The key (name) under which to store the file in the bucket.
-   * @param {object} [metadata={}] - Optional metadata to attach to the file.
-   * @returns {Promise<object>} A promise resolving to an object with success status and either the uploaded file URL or error message.
+   * Sube un archivo al bucket de Filebase, asegurándose de no sobrescribir uno existente.
+   * Si ya existe un archivo con el mismo nombre, agrega un sufijo (1), (2), etc.
+   * @param {string} filePath - Ruta local del archivo.
+   * @param {string} fileName - Nombre deseado en el bucket.
+   * @param {object} [metadata={}] - Metadatos opcionales.
+   * @returns {Promise<object>} Resultado del upload con URL o mensaje de error.
    */
   async uploadFile(filePath, fileName, metadata = {}) {
     try {
       const fileContent = fs.readFileSync(filePath);
+
+      // Separar nombre y extensión
+      const extIndex = fileName.lastIndexOf('.');
+      const baseName = extIndex !== -1 ? fileName.substring(0, extIndex) : fileName;
+      const extension = extIndex !== -1 ? fileName.substring(extIndex) : '';
+
+      let finalKey = fileName;
+      let suffix = 1;
+
+      // Verificar existencia y generar nombre único si es necesario
+      while (true) {
+        const exists = await this.getFileMetadata(finalKey);
+        if (!exists.success) break;
+        finalKey = `${baseName}(${suffix})${extension}`;
+        suffix++;
+      }
+
       const params = {
         Bucket: this.bucketName,
-        Key: fileName,
+        Key: finalKey,
         Body: fileContent,
         ContentType: 'application/pdf',
         Metadata: metadata,
       };
 
       const data = await this.s3.upload(params).promise();
-      return { success: true, data: { location: data.Location } };
+
+      return {
+        success: true,
+        data: {
+          location: data.Location,
+          key: finalKey,
+        },
+      };
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -118,6 +143,52 @@ class FilebaseClient {
     }
   }
 
+  /**
+ * Renombra un archivo en el bucket, agregando un sufijo si el nuevo nombre ya existe.
+ * Por ejemplo: documento.pdf → documento(1).pdf → documento(2).pdf, etc.
+ * @param {string} oldKey - Nombre actual del archivo.
+ * @param {string} newKey - Nuevo nombre deseado.
+ * @returns {Promise<object>} Resultado con `success`, `message` o `error`.
+ */
+  async renameFile(oldKey, newKey) {
+    try {
+      // Separar nombre y extensión
+      const extIndex = newKey.lastIndexOf('.');
+      const baseName = extIndex !== -1 ? newKey.substring(0, extIndex) : newKey;
+      const extension = extIndex !== -1 ? newKey.substring(extIndex) : '';
+
+      let finalKey = newKey;
+      let suffix = 1;
+
+      // Buscar un nombre disponible
+      while (true) {
+        const exists = await this.getFileMetadata(finalKey);
+        if (!exists.success) break; // no existe, lo podemos usar
+        finalKey = `${baseName}(${suffix})${extension}`;
+        suffix++;
+      }
+
+      // Copiar el archivo al nuevo nombre disponible
+      await this.s3.copyObject({
+        Bucket: this.bucketName,
+        CopySource: `/${this.bucketName}/${encodeURIComponent(oldKey)}`,
+        Key: finalKey,
+      }).promise();
+
+      // Eliminar el original
+      await this.s3.deleteObject({
+        Bucket: this.bucketName,
+        Key: oldKey,
+      }).promise();
+
+      return {
+        success: true,
+        message: `Archivo renombrado de "${oldKey}" a "${finalKey}".`,
+      };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 module.exports = FilebaseClient;
